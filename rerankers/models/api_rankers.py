@@ -5,7 +5,7 @@ from rerankers.utils import ensure_docids, ensure_docs_list
 
 import requests
 import json
-
+import os
 
 URLS = {
     "cohere": "https://api.cohere.ai/v1/rerank",
@@ -15,7 +15,26 @@ URLS = {
 
 
 class APIRanker(BaseRanker):
-    def __init__(self, model: str, api_key: str, api_provider: str, verbose: int = 1):
+
+    def __init__(
+        self,
+        model: str,
+        api_provider: str,
+        verbose: int = 1,
+        api_key: Optional[str] = None,
+    ):
+        if api_key is None:
+            env_vars = ["COHERE_API_KEY", "JINA_API_KEY"]
+            for env_var in env_vars:
+                api_key = os.getenv(env_var)
+                if api_key is not None:
+                    break
+
+        if api_key is None:
+            raise ValueError(
+                f"API key not provided and none of the environment variables {', '.join(env_vars)} are set"
+            )
+
         self.api_key = api_key
         self.model = model
         self.api_provider = api_provider.lower()
